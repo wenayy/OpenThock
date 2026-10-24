@@ -1,0 +1,12 @@
+{
+  "author": "Hai Nguyen (Mechvibes); sliced per key by KeyClick",
+  "bundledVersion": 1,
+  "colors": [
+    "#d6a77a",
+    "#7c4a1e"
+  ],
+  "description": "Tactile bump. Real per-key recordings from Mechvibes.",
+  "gain": 1,
+  "license": "MIT",
+  "name": "Cherry MX Brown"
+}

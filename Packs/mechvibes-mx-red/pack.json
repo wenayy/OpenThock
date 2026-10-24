@@ -1,0 +1,12 @@
+{
+  "author": "Hai Nguyen (Mechvibes); sliced per key by KeyClick",
+  "bundledVersion": 1,
+  "colors": [
+    "#fca5a5",
+    "#dc2626"
+  ],
+  "description": "Light linear. Real per-key recordings from Mechvibes.",
+  "gain": 1,
+  "license": "MIT",
+  "name": "Cherry MX Red"
+}

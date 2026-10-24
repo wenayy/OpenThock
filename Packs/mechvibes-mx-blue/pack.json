@@ -1,0 +1,12 @@
+{
+  "author": "Hai Nguyen (Mechvibes); sliced per key by KeyClick",
+  "bundledVersion": 1,
+  "colors": [
+    "#93c5fd",
+    "#2563eb"
+  ],
+  "description": "Clicky. Real per-key recordings from Mechvibes.",
+  "gain": 1,
+  "license": "MIT",
+  "name": "Cherry MX Blue"
+}
