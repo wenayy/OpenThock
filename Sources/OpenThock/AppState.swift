@@ -42,6 +42,7 @@ final class AppState: ObservableObject {
     private var player = SoundPlayer()
     private var frontmostBundleID: String?
     private var permissionTimer: Timer?
+    private var tapHasPermission = false
 
     private init() {
         defaults.register(defaults: [
@@ -90,6 +91,7 @@ final class AppState: ObservableObject {
         observeFrontmostApp()
         recorder.onPreview = { [weak self] take in self?.preview(take) }
         Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { _ in cm_collect() }
+        if !hasPermission { InputMonitor.requestPermission() }
         if !hasPermission || !defaults.bool(forKey: "welcomed") {
             defaults.set(true, forKey: "welcomed")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { WelcomeWindow.show() }
@@ -99,17 +101,32 @@ final class AppState: ObservableObject {
     // MARK: - Input
 
     func startMonitoring() {
-        hasPermission = InputMonitor.hasPermission
-        if monitor.start() {
-            hasPermission = true
-            permissionTimer?.invalidate()
-            permissionTimer = nil
-        } else if permissionTimer == nil {
-            // Keep retrying until the user grants Input Monitoring.
+        tapHasPermission = InputMonitor.hasPermission
+        hasPermission = tapHasPermission
+        monitor.stop()
+        monitor.start()
+        // Without Input Monitoring, macOS still creates the tap but only delivers keys typed
+        // into our own windows. Keep checking, and re-create the tap once access is granted.
+        if permissionTimer == nil {
             permissionTimer = Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { [weak self] _ in
-                MainActor.assumeIsolated { self?.startMonitoring() }
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    let granted = InputMonitor.hasPermission
+                    if granted != self.tapHasPermission || !self.monitor.isRunning { self.startMonitoring() }
+                }
             }
         }
+    }
+
+    /// Clears a stale Input Monitoring entry (e.g. after an update changed the app's signature)
+    /// and asks again.
+    func resetPermission() {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+        task.arguments = ["reset", "ListenEvent", Bundle.main.bundleIdentifier ?? "dev.openthock.OpenThock"]
+        try? task.run()
+        task.waitUntilExit()
+        requestPermission()
     }
 
     func requestPermission() {

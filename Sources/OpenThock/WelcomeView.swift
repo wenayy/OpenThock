@@ -42,8 +42,13 @@ struct WelcomeView: View {
                 Step(number: 1, title: "Allow Input Monitoring",
                      detail: "macOS asks this for any app that reacts to your keyboard. OpenThock never stores or sends what you type, and it has no network code.",
                      done: state.hasPermission) {
-                    Button(state.hasPermission ? "Granted" : "Open System Settings…") { state.requestPermission() }
-                        .buttonStyle(.borderedProminent).tint(accent).disabled(state.hasPermission)
+                    HStack {
+                        Button(state.hasPermission ? "Granted" : "Open System Settings…") { state.requestPermission() }
+                            .buttonStyle(.borderedProminent).tint(accent).disabled(state.hasPermission)
+                        if !state.hasPermission {
+                            Button("Already on but silent? Reset") { state.resetPermission() }.buttonStyle(.link)
+                        }
+                    }
                 }
                 Step(number: 2, title: "Type anything",
                      detail: "Sounds play in every app. Toggle with ⌃⌥K, or from the keyboard icon in the menu bar.",

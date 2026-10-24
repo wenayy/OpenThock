@@ -56,7 +56,10 @@ struct MenuView: View {
                     .foregroundStyle(accent)
                 Text("Allow OpenThock in Input Monitoring so it can hear your keystrokes. Nothing you type is stored or sent anywhere.")
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                Button("Grant Access…") { state.requestPermission() }.buttonStyle(.borderedProminent)
+                HStack {
+                    Button("Grant Access…") { state.requestPermission() }.buttonStyle(.borderedProminent)
+                    Button("Reset") { state.resetPermission() }.help("Use this if OpenThock is already listed but still silent")
+                }
             }
         }
     }
@@ -182,6 +185,7 @@ struct MenuView: View {
                 Button("Reload Packs") { state.reloadPacks() }
                 Divider()
                 Button("Welcome Guide") { WelcomeWindow.show() }
+                Button("Fix Keyboard Permission…") { state.resetPermission() }
                 Button("GitHub Page") { NSWorkspace.shared.open(URL(string: "https://github.com/wenayy/OpenThock")!) }
                 Text("\(stats.total.formatted()) keystrokes total" + (stats.topKey.map { " · top key \($0)" } ?? ""))
                 Divider()
