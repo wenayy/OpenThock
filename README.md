@@ -33,6 +33,18 @@ Red, Brown, Blue and Topre, and you can record your own keyboard.
 A keyboard icon appears in your menu bar. Click it to pick a switch, change the volume,
 tune the sound, or record your own keyboard. Press **⌃⌥K** anywhere to turn it on or off.
 
+### Troubleshooting
+
+- **No sound when typing (or only inside OpenThock's own window):** the keyboard permission is
+  missing or stale. This often happens right after an update. Click the menu-bar icon → ⚙️ →
+  **Fix Keyboard Permission…**, then turn OpenThock on again in *System Settings → Privacy &
+  Security → Input Monitoring*.
+- **No sound in one app (e.g. Terminal):** that app may have *Secure Keyboard Entry* turned on,
+  which hides keystrokes from all apps. Turn it off in that app's menu.
+- **Updating:** download the new DMG and drag it over the old app. You may need to re-enable
+  Input Monitoring afterwards (see above).
+- **Too quiet:** OpenThock can't go louder than your Mac's volume; raise both.
+
 **Privacy:** OpenThock has no network code. It never stores or sends your keystrokes;
 it only counts them for the stats in the menu.
 
