@@ -134,7 +134,33 @@ struct MenuView: View {
             ToggleRow("Mouse clicks", icon: "computermouse.fill", isOn: $state.mouseSounds)
             ToggleRow("Scroll wheel", icon: "arrow.up.and.down", isOn: $state.scrollSounds)
             ToggleRow("Ding on return", icon: "bell.fill", isOn: $state.returnDing)
+            if state.returnDing { dingOptions }
         }
+    }
+
+    private var dingOptions: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Picker("", selection: $state.dingStyle) {
+                    ForEach(DingStyle.allCases.filter { $0 != .pack || state.packHasDing }) { style in
+                        Text(style.title).tag(style)
+                    }
+                }
+                .labelsHidden().controlSize(.small)
+                Button { state.playDing() } label: { Image(systemName: "play.fill") }
+                    .buttonStyle(.borderless).help("Hear it")
+            }
+            HStack(spacing: 8) {
+                Image(systemName: "bell").font(.caption2).foregroundStyle(.secondary)
+                Slider(value: $state.dingVolume, in: 0...1).controlSize(.small)
+                Image(systemName: "bell.and.waves.left.and.right").font(.caption2).foregroundStyle(.secondary)
+            }
+            Toggle(isOn: $state.dingLongLinesOnly) {
+                Text("Only after long lines (\(AppState.longLineLength)+ characters)").font(.caption)
+            }
+            .toggleStyle(.checkbox)
+        }
+        .padding(.leading, 26)
     }
 
     private var sleep: some View {

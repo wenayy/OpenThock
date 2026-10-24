@@ -84,6 +84,13 @@ enum SelfTest {
             check(false, "temp pack: \(error)")
         }
 
+        print("Dings")
+        for style in DingStyle.synthesized {
+            let clip = Synth.ding(style)
+            let peak = clip.map(abs).max() ?? 0
+            check(!clip.isEmpty && peak > 0.05 && peak < 1, "\(style.title) renders (peak \(String(format: "%.2f", peak)))")
+        }
+
         print(failures == 0 ? "All checks passed." : "\(failures) check(s) failed.")
         return failures == 0
     }

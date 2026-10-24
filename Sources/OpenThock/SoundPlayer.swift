@@ -1,6 +1,26 @@
 import CMixer
 import Foundation
 
+enum DingStyle: String, CaseIterable, Identifiable {
+    case classic, typewriter, soft, glass, marimba, bubble, random
+    /// The switch set's own `ding.wav`, when it has one.
+    case pack
+    var id: String { rawValue }
+    static let synthesized: [DingStyle] = [.classic, .typewriter, .soft, .glass, .marimba, .bubble]
+    var title: String {
+        switch self {
+        case .classic: return "Classic Bell"
+        case .typewriter: return "Vintage Typewriter"
+        case .soft: return "Soft Chime"
+        case .glass: return "Glass"
+        case .marimba: return "Marimba"
+        case .bubble: return "Bubble"
+        case .random: return "Random"
+        case .pack: return "From Switch Set"
+        }
+    }
+}
+
 enum SpatialMode: String, CaseIterable, Identifiable {
     case auto, off, stereo, threeD
     var id: String { rawValue }

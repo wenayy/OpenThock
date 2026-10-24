@@ -6,7 +6,7 @@ import Foundation
 /// For a truly authentic sound, record your own keyboard with the Recorder.
 enum Synth {
     static let sampleRate = 48_000.0
-    static let version = 3
+    static let version = 4
 
     struct Style {
         let slug: String
@@ -116,7 +116,7 @@ enum Synth {
             for i in 0..<(length - bottomOut) {
                 let t = Float(i) / sr
                 let env = exp(-t / decay) * min(1, t / 0.0005)
-                if env < 1e-5 { break }
+                if t > 0.01 && env < 1e-5 { break }
                 out[bottomOut + i] += amp * sin(w * Float(i) + phase) * env * 0.5
             }
         }
@@ -155,24 +155,70 @@ enum Synth {
             fadeOut(&out, seconds: 0.01)
             return out
         }
-        var ding = [Float](repeating: 0, count: Int(sampleRate * 1.4))
-        let partials: [(Float, Float, Float)] = [(1, 1, 1.1), (2.0, 0.35, 0.5), (2.76, 0.4, 0.4), (5.4, 0.15, 0.15)]
-        for (ratio, amp, decay) in partials {
-            let w = 2 * Float.pi * 2050 * ratio / Float(sampleRate)
-            for i in 0..<ding.count {
-                let t = Float(i) / Float(sampleRate)
-                ding[i] += sin(w * Float(i)) * amp * exp(-t / decay) * min(1, t / 0.001) * 0.22
-            }
-        }
-        fadeOut(&ding, seconds: 0.05)
         return [
             ("mouse-left|down", click(hz: 3300, body: 1100, amount: 0.5)),
             ("mouse-left|up", click(hz: 3900, body: 1300, amount: 0.3)),
             ("mouse-right|down", click(hz: 3000, body: 1000, amount: 0.5)),
             ("mouse-right|up", click(hz: 3600, body: 1200, amount: 0.3)),
             ("scroll|down", click(hz: 2600, body: 1800, amount: 0.18)),
-            ("ding|down", ding),
-        ]
+        ] + DingStyle.synthesized.map { ("ding-\($0.rawValue)|down", ding($0)) }
+    }
+
+    // MARK: - Return-key dings
+
+    /// Sum of decaying partials, with an optional strike transient and slow beating.
+    private static func bell(hz: Float, partials: [(ratio: Float, amp: Float, decay: Float)], seconds: Float,
+                             gain: Float, strike: Float = 0, beat: Float = 0) -> [Float] {
+        let sr = Float(sampleRate)
+        var out = [Float](repeating: 0, count: Int(sr * seconds))
+        for p in partials {
+            let w = 2 * Float.pi * hz * p.ratio / sr
+            for i in 0..<out.count {
+                let t = Float(i) / sr
+                let env = exp(-t / p.decay) * min(1, t / 0.001)
+                if t > 0.01 && env < 1e-5 { break }
+                let tremolo = 1 - beat * 0.5 * (1 - cos(2 * Float.pi * 4.5 * t))
+                out[i] += sin(w * Float(i)) * p.amp * env * tremolo * gain
+            }
+        }
+        if strike > 0 {
+            var rng = SplitMix64(seed: UInt64(hz))
+            addResonantBurst(&out, at: 0, hz: 3800, decay: 0.0008, amount: strike, rng: &rng)
+        }
+        fadeOut(&out, seconds: 0.05)
+        return out
+    }
+
+    static func ding(_ style: DingStyle) -> [Float] {
+        switch style {
+        case .classic:
+            return bell(hz: 2050, partials: [(1, 1, 1.1), (2.0, 0.35, 0.5), (2.76, 0.4, 0.4), (5.4, 0.15, 0.15)],
+                        seconds: 1.4, gain: 0.22)
+        case .typewriter:
+            // Struck bell with a mechanical tick and the slow beating of a slightly bent bell.
+            return bell(hz: 1780, partials: [(1, 1, 0.9), (1.006, 0.6, 0.9), (2.32, 0.35, 0.35), (4.1, 0.2, 0.1)],
+                        seconds: 1.2, gain: 0.18, strike: 0.5, beat: 0.25)
+        case .soft:
+            return bell(hz: 880, partials: [(1, 1, 0.45), (2, 0.18, 0.2), (3, 0.06, 0.1)], seconds: 0.8, gain: 0.2)
+        case .glass:
+            return bell(hz: 2637, partials: [(1, 1, 0.35), (2.0, 0.2, 0.15), (3.01, 0.1, 0.08)], seconds: 0.6, gain: 0.16)
+        case .marimba:
+            return bell(hz: 660, partials: [(1, 1, 0.22), (3.93, 0.3, 0.05), (9.2, 0.1, 0.02)], seconds: 0.45,
+                        gain: 0.3, strike: 0.2)
+        case .bubble:
+            let sr = Float(sampleRate)
+            var out = [Float](repeating: 0, count: Int(sr * 0.12))
+            var phase: Float = 0
+            for i in 0..<out.count {
+                let t = Float(i) / sr
+                phase += 2 * Float.pi * (480 + 900 * min(1, t / 0.05)) / sr
+                out[i] = sin(phase) * exp(-t / 0.03) * min(1, t / 0.002) * 0.4
+            }
+            fadeOut(&out, seconds: 0.02)
+            return out
+        case .random, .pack:
+            return []
+        }
     }
 
     // MARK: - DSP helpers

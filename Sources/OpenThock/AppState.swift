@@ -20,6 +20,10 @@ final class AppState: ObservableObject {
     @Published var mouseSounds: Bool { didSet { defaults.set(mouseSounds, forKey: "sounds.mouse") } }
     @Published var scrollSounds: Bool { didSet { defaults.set(scrollSounds, forKey: "sounds.scroll") } }
     @Published var returnDing: Bool { didSet { defaults.set(returnDing, forKey: "sounds.ding") } }
+    @Published var dingStyle: DingStyle { didSet { defaults.set(dingStyle.rawValue, forKey: "ding.style") } }
+    @Published var dingVolume: Double { didSet { defaults.set(dingVolume, forKey: "ding.volume") } }
+    /// Typewriter-style: only ring after a real line of typing, and never in quick succession.
+    @Published var dingLongLinesOnly: Bool { didSet { defaults.set(dingLongLinesOnly, forKey: "ding.longLines") } }
     @Published var outputDeviceUID: String? { didSet { defaults.set(outputDeviceUID, forKey: "output"); output.use(deviceUID: outputDeviceUID); refreshHeadphones() } }
     @Published var mutedApps: [String] { didSet { defaults.set(mutedApps, forKey: "mutedApps") } }
 
@@ -49,6 +53,7 @@ final class AppState: ObservableObject {
             "enabled": true, "pack": "mechvibes-topre", "volume": 0.7, "tone.pitch": 0.0, "tone.variation": 0.25,
             "spatial": SpatialMode.auto.rawValue, "sounds.modifiers": true, "sounds.mouse": false,
             "sounds.scroll": false, "sounds.ding": false,
+            "ding.style": DingStyle.classic.rawValue, "ding.volume": 0.5, "ding.longLines": true,
         ])
         enabled = defaults.bool(forKey: "enabled")
         selectedPackID = defaults.string(forKey: "pack") ?? "mechvibes-topre"
@@ -60,6 +65,9 @@ final class AppState: ObservableObject {
         mouseSounds = defaults.bool(forKey: "sounds.mouse")
         scrollSounds = defaults.bool(forKey: "sounds.scroll")
         returnDing = defaults.bool(forKey: "sounds.ding")
+        dingStyle = DingStyle(rawValue: defaults.string(forKey: "ding.style") ?? "") ?? .classic
+        dingVolume = defaults.double(forKey: "ding.volume")
+        dingLongLinesOnly = defaults.bool(forKey: "ding.longLines")
         outputDeviceUID = defaults.string(forKey: "output")
         mutedApps = defaults.stringArray(forKey: "mutedApps") ?? []
 
@@ -160,9 +168,7 @@ final class AppState: ObservableObject {
                 if key.isModifierLike && !modifierSounds { return }
             }
             play(key, down: down)
-            if down, returnDing, key.id == "28" || key.id == "3612", let ding = bank.ding ?? bank.sharedDing {
-                player.trigger(sample: ding, key: key, gain: 0.6)
-            }
+            if down { handleDing(after: key) }
         case .scroll:
             guard scrollSounds, let sample = bank.entry(for: "scroll")?.down else { return }
             player.trigger(sample: sample, key: KeyMap.scroll, gain: 0.8)
@@ -170,6 +176,40 @@ final class AppState: ObservableObject {
             break
         }
     }
+
+    private var charsSinceReturn = 0
+    private var lastDing = Date.distantPast
+    static let longLineLength = 30
+
+    private func handleDing(after key: KeyDef) {
+        let isReturn = key.id == "28" || key.id == "3612"
+        guard isReturn else {
+            if [.alpha, .number, .punctuation, .space].contains(key.group) { charsSinceReturn += 1 }
+            if key.group == .backspace { charsSinceReturn = max(0, charsSinceReturn - 1) }
+            return
+        }
+        defer { charsSinceReturn = 0 }
+        guard returnDing else { return }
+        if dingLongLinesOnly {
+            guard charsSinceReturn >= Self.longLineLength, Date().timeIntervalSince(lastDing) > 1.5 else { return }
+        }
+        playDing()
+    }
+
+    func playDing() {
+        var style = dingStyle
+        if style == .random { style = DingStyle.synthesized.randomElement()! }
+        guard let sample = (style == .pack ? bank.ding : bank.sharedDing(style)) ?? bank.sharedDing(.classic),
+              let key = KeyMap.byID["28"] else { return }
+        lastDing = Date()
+        // Each ring wobbles slightly in pitch and loudness so repeats don't sound canned.
+        var dingPlayer = player
+        dingPlayer.pitch = player.pitch * 0.3
+        dingPlayer.variation = max(player.variation, 0.5)
+        dingPlayer.trigger(sample: sample, key: key, gain: Float(dingVolume * 1.2))
+    }
+
+    var packHasDing: Bool { bank.ding != nil }
 
     private func play(_ key: KeyDef, down: Bool) {
         guard let entry = bank.entry(for: key.id), let sample = down ? entry.down : entry.up else { return }

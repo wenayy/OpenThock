@@ -199,7 +199,7 @@ final class SoundBank {
     }
 
     func entry(for id: String) -> Entry? { entries[id] ?? shared[id] }
-    var sharedDing: Int32? { shared["ding"]?.down }
+    func sharedDing(_ style: DingStyle) -> Int32? { shared["ding-\(style.rawValue)"]?.down }
 
     func groupGain(_ group: KeyGroup) -> Float {
         Float(pack?.manifest.groupGains?[group.rawValue] ?? 1)

@@ -55,7 +55,7 @@ OpenThock uses the same model and the same file naming.
 - 3 **procedurally generated** switch sets (Thock / Clack / Clicky), CC0
 - **Tone Pad**: X = pitch, Y = per-press variation (small randomized playback rate)
 - **Spatial audio**: 2D stereo panning by key position, or 3D (ITD/ILD + head shadow) on headphones; Auto picks for you
-- Mouse click, scroll-wheel tick, and optional typewriter **ding on return**
+- Mouse click, scroll-wheel tick, and an optional **ding on return**: 6 styles (Classic Bell, Vintage Typewriter, Soft Chime, Glass, Marimba, Bubble) or Random, its own volume, and a typewriter-style "only after long lines" mode
 - Modifier-key toggle, function and media keys, numpad
 - Ignores synthetic (software-generated) key events
 - Output device picker, global toggle **⌃⌥K**, timed sleep, per-app mute
