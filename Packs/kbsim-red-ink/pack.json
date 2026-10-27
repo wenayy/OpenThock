@@ -1,0 +1,12 @@
+{
+  "author": "Thomas Lai (kbsim)",
+  "bundledVersion": 1,
+  "colors": [
+    "#fca5a5",
+    "#b91c1c"
+  ],
+  "description": "Light, poppy linear. kbsim recordings.",
+  "gain": 1,
+  "license": "MIT",
+  "name": "Gateron Red Ink"
+}

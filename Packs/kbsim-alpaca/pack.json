@@ -1,0 +1,12 @@
+{
+  "author": "Thomas Lai (kbsim)",
+  "bundledVersion": 1,
+  "colors": [
+    "#fde68a",
+    "#f59e0b"
+  ],
+  "description": "Smooth linear, soft and creamy. kbsim recordings.",
+  "gain": 1,
+  "license": "MIT",
+  "name": "Alpaca"
+}

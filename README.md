@@ -10,8 +10,8 @@
 </p>
 
 Every key has its **own** press sound and its **own** release sound, recorded from real
-switches, the way [Klack](https://tryklack.com) does it. It ships with Cherry MX Black,
-Red, Brown, Blue and Topre, and you can record your own keyboard.
+switches, the way [Klack](https://tryklack.com) does it. It ships with 12 recorded switch sets (Topre, Holy Panda, Alpaca,
+Gateron Ink, Cherry MX and more), and you can record your own keyboard.
 
 > OpenThock is an independent project. It isn't affiliated with Klack and contains no
 > Klack code or audio. If you love Klack's hand-recorded switch sets, buy Klack and
@@ -64,7 +64,7 @@ OpenThock uses the same model and the same file naming.
 - **Per-key press + release sounds**, with deterministic same-group fallback for keys a pack lacks
 - **Keyboard Recorder**: record your own keyboard key by key from the mic, with automatic onset detection, trimming and pack-wide normalization
 - **5 real recorded switch sets** with per-key press and release files: Cherry MX Black, Red, Brown, Blue, and Topre (Mechvibes recordings, MIT; see [SOUNDS-LICENSE.md](SOUNDS-LICENSE.md))
-- 3 **procedurally generated** switch sets (Thock / Clack / Clicky), CC0
+- **7 more from [kbsim](https://github.com/tplai/kbsim)** (MIT): Alpaca, Gateron Black Ink, Gateron Red Ink, Holy Panda, Cherry MX Black/Blue/Brown. These use 5 alpha takes plus space/enter/backspace, assigned to fixed keys
 - **Tone Pad**: X = pitch, Y = per-press variation (small randomized playback rate)
 - **Spatial audio**: 2D stereo panning by key position, or 3D (ITD/ILD + head shadow) on headphones; Auto picks for you
 - Mouse click, scroll-wheel tick, and an optional **ding on return**: 6 styles (Classic Bell, Vintage Typewriter, Soft Chime, Glass, Marimba, Bubble) or Random, its own volume, and a typewriter-style "only after long lines" mode
@@ -97,7 +97,7 @@ Headless tools:
 ```bash
 swift build
 .build/debug/OpenThock --self-test                                  # engine checks
-.build/debug/OpenThock --render-demo demo.wav --pack synth-clicky   # hear a pack without permissions
+.build/debug/OpenThock --render-demo demo.wav --pack kbsim-holy-panda   # hear a pack without permissions
 ```
 
 ## Record your own keyboard
@@ -141,7 +141,7 @@ Sources/OpenThock/
   SoundPlayer.swift      tone pad, variation, 2D/3D spatialization
   AudioOutput.swift      AVAudioEngine host, device selection
   Recorder.swift         mic ring buffer, onset detection, pack writer
-  Synth.swift            procedural switch sets
+  Synth.swift            mouse/scroll/ding sounds
 docs/REVERSE_ENGINEERING.md
 ```
 
@@ -152,4 +152,4 @@ AppleScript/Raycast, haptics.
 
 ## License
 
-MIT for the code. Bundled recordings: MIT (Hai Nguyen / Mechvibes), see [SOUNDS-LICENSE.md](SOUNDS-LICENSE.md). Synthesized packs: CC0.
+MIT for the code. Bundled recordings: MIT (Hai Nguyen / Mechvibes), see [SOUNDS-LICENSE.md](SOUNDS-LICENSE.md). kbsim recordings: MIT (Thomas Lai). Built-in mouse/ding sounds: CC0.

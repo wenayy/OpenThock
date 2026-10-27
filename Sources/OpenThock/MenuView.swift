@@ -229,17 +229,12 @@ struct MenuView: View {
 // MARK: - Components
 
 enum PackCategory: CaseIterable {
-    case yours, recorded, synth
-    init(pack: PackInfo) {
-        if pack.id.hasPrefix("synth-") { self = .synth }
-        else if pack.manifest.bundledVersion != nil { self = .recorded }
-        else { self = .yours }
-    }
+    case yours, recorded
+    init(pack: PackInfo) { self = pack.manifest.bundledVersion != nil ? .recorded : .yours }
     var title: String {
         switch self {
         case .yours: return "Your sets"
         case .recorded: return "Recorded switches"
-        case .synth: return "Synthesized"
         }
     }
 }

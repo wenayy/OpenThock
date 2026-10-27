@@ -1,0 +1,12 @@
+{
+  "author": "Thomas Lai (kbsim)",
+  "bundledVersion": 1,
+  "colors": [
+    "#60a5fa",
+    "#1e40af"
+  ],
+  "description": "Clicky, second recording. kbsim recordings.",
+  "gain": 1,
+  "license": "MIT",
+  "name": "Cherry MX Blue (kbsim)"
+}

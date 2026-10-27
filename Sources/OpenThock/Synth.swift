@@ -36,12 +36,10 @@ enum Synth {
 
     // MARK: - Pack generation
 
-    /// Generates any built-in pack that's missing or was made by an older generator.
+    /// Synthesized switch sets were dropped in favor of real recordings; remove old copies.
     static func ensureBuiltInPacks() {
         for style in styles {
-            let dir = PackStore.directory.appendingPathComponent(style.slug, isDirectory: true)
-            if PackStore.readManifest(at: dir)?.generatorVersion == version { continue }
-            try? generatePack(style, into: dir)
+            try? FileManager.default.removeItem(at: PackStore.directory.appendingPathComponent(style.slug))
         }
     }
 

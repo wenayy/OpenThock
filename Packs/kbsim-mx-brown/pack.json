@@ -1,0 +1,12 @@
+{
+  "author": "Thomas Lai (kbsim)",
+  "bundledVersion": 1,
+  "colors": [
+    "#c08457",
+    "#5b3412"
+  ],
+  "description": "Tactile, second recording. kbsim recordings.",
+  "gain": 1,
+  "license": "MIT",
+  "name": "Cherry MX Brown (kbsim)"
+}

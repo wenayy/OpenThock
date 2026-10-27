@@ -1,0 +1,12 @@
+{
+  "author": "Thomas Lai (kbsim)",
+  "bundledVersion": 1,
+  "colors": [
+    "#fde047",
+    "#a16207"
+  ],
+  "description": "Famous sharp tactile bump. kbsim recordings.",
+  "gain": 1,
+  "license": "MIT",
+  "name": "Holy Panda"
+}

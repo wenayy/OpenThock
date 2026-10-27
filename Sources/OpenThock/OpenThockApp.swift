@@ -16,7 +16,7 @@ enum Main {
             exit(SelfTest.run() ? 0 : 1)
         }
         if let i = args.firstIndex(of: "--render-demo"), i + 1 < args.count {
-            let pack = args.firstIndex(of: "--pack").flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil } ?? "synth-thock"
+            let pack = args.firstIndex(of: "--pack").flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil } ?? "mechvibes-topre"
             exit(SelfTest.renderDemo(packID: pack, to: URL(fileURLWithPath: args[i + 1])) ? 0 : 1)
         }
         OpenThockApp.main()

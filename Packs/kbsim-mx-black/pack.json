@@ -1,0 +1,12 @@
+{
+  "author": "Thomas Lai (kbsim)",
+  "bundledVersion": 1,
+  "colors": [
+    "#57534e",
+    "#0c0a09"
+  ],
+  "description": "Heavy linear, second recording. kbsim recordings.",
+  "gain": 1,
+  "license": "MIT",
+  "name": "Cherry MX Black (kbsim)"
+}
