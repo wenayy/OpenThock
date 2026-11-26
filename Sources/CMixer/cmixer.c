@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static inline float clampf_(float x) { return x < 0 ? 0 : (x > 1 ? 1 : x); }
+
 #define MAX_SAMPLES 4096
 #define MAX_VOICES 96
 #define QUEUE_SIZE 512 /* power of two */
@@ -41,6 +43,11 @@ static _Atomic float masterTarget = 1.0f;
 static _Atomic int stopAllRequested;
 static _Atomic int32_t activeVoices;
 static float masterCurrent = 1.0f;
+static _Atomic float softnessTarget = 0.0f;
+static float softnessApplied = -1.0f;
+static double softnessRate = 0.0;
+static float lpB0 = 1, lpB1 = 0, lpB2 = 0, lpA1 = 0, lpA2 = 0;
+static float lpZ[2][2];
 static uint64_t voiceClock;
 
 int32_t cm_sample_add(const float *left, const float *right, uint32_t frames, double sampleRate) {
@@ -91,6 +98,26 @@ void cm_set_output_rate(double sampleRate) {
 
 void cm_set_master_gain(float gain) { atomic_store(&masterTarget, gain); }
 
+void cm_set_softness(float softness) { atomic_store(&softnessTarget, clampf_(softness)); }
+
+/* Softness 0 leaves the sound alone; 1 rolls the top end off from about 3 kHz. */
+static void update_lowpass(double outRate) {
+    float s = atomic_load(&softnessTarget);
+    if (s == softnessApplied && outRate == softnessRate) return;
+    softnessApplied = s;
+    softnessRate = outRate;
+    if (s <= 0.001f) { lpB0 = 1; lpB1 = lpB2 = lpA1 = lpA2 = 0; return; }
+    double cutoff = 18000.0 * pow(3000.0 / 18000.0, s);
+    if (cutoff > outRate * 0.45) cutoff = outRate * 0.45;
+    double w = 2.0 * M_PI * cutoff / outRate, cw = cos(w), alpha = sin(w) / (2.0 * 0.7071);
+    double a0 = 1.0 + alpha;
+    lpB0 = (float)((1.0 - cw) / 2.0 / a0);
+    lpB1 = (float)((1.0 - cw) / a0);
+    lpB2 = lpB0;
+    lpA1 = (float)(-2.0 * cw / a0);
+    lpA2 = (float)((1.0 - alpha) / a0);
+}
+
 void cm_stop_all(void) { atomic_store(&stopAllRequested, 1); }
 
 void cm_trigger(const cm_trigger_t *trigger) {
@@ -132,11 +159,20 @@ static void start_voice(const cm_trigger_t *t, double outRate) {
     v->age = ++voiceClock;
 }
 
+static inline float at(const float *data, uint32_t frames, int64_t i) {
+    return (i < 0 || i >= (int64_t)frames) ? 0.0f : data[i];
+}
+
+/* 4-point Hermite: keeps more of the click's top end than linear interpolation when the rate jitters. */
 static inline float read_interp(const float *data, uint32_t frames, double pos) {
     if (pos < 0 || pos >= (double)(frames - 1)) return 0.0f;
-    uint32_t i = (uint32_t)pos;
-    float frac = (float)(pos - (double)i);
-    return data[i] + (data[i + 1] - data[i]) * frac;
+    int64_t i = (int64_t)pos;
+    float t = (float)(pos - (double)i);
+    float xm1 = at(data, frames, i - 1), x0 = data[i], x1 = data[i + 1], x2 = at(data, frames, i + 2);
+    float c1 = 0.5f * (x1 - xm1);
+    float c2 = xm1 - 2.5f * x0 + 2.0f * x1 - 0.5f * x2;
+    float c3 = 0.5f * (x2 - xm1) + 1.5f * (x0 - x1);
+    return ((c3 * t + c2) * t + c1) * t + x0;
 }
 
 void cm_render(float *outL, float *outR, uint32_t frames) {
@@ -192,14 +228,19 @@ void cm_render(float *outL, float *outR, uint32_t frames) {
     }
     atomic_store(&activeVoices, count);
 
-    /* 4. Master gain (smoothed) and a soft knee so chords never hard-clip. */
+    /* 4. Softness low-pass, master gain (smoothed) and a soft knee so chords never hard-clip. */
+    update_lowpass(outRate);
     float target = atomic_load(&masterTarget);
     for (uint32_t i = 0; i < frames; i++) {
         masterCurrent += (target - masterCurrent) * 0.002f;
         for (int c = 0; c < 2; c++) {
             float *buf = c == 0 ? outL : outR;
             if (!buf) continue;
-            float x = buf[i] * masterCurrent;
+            float in = buf[i];
+            float y = lpB0 * in + lpZ[c][0];
+            lpZ[c][0] = lpB1 * in - lpA1 * y + lpZ[c][1];
+            lpZ[c][1] = lpB2 * in - lpA2 * y;
+            float x = y * masterCurrent;
             float ax = fabsf(x);
             if (ax > 0.8f) x = copysignf(0.8f + 0.2f * tanhf((ax - 0.8f) / 0.2f), x);
             buf[i] = x;

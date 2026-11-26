@@ -18,6 +18,7 @@ struct MenuView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         volume
                         TonePadSection(pitch: $state.tonePitch, variation: $state.toneVariation)
+                        softness
                     }
                 }
                 Card { spatial }
@@ -99,6 +100,17 @@ struct MenuView: View {
                 Image(systemName: "speaker.fill").font(.caption).foregroundStyle(.secondary)
                 Slider(value: $state.volume, in: 0...1)
                 Image(systemName: "speaker.wave.3.fill").font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var softness: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            SectionTitle("Softness", icon: "waveform.path")
+            HStack(spacing: 8) {
+                Text("Crisp").font(.caption).foregroundStyle(.secondary)
+                Slider(value: $state.softness, in: 0...1)
+                Text("Soft").font(.caption).foregroundStyle(.secondary)
             }
         }
     }

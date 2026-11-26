@@ -15,6 +15,7 @@ final class AppState: ObservableObject {
     @Published var volume: Double { didSet { defaults.set(volume, forKey: "volume"); applyVolume() } }
     @Published var tonePitch: Double { didSet { defaults.set(tonePitch, forKey: "tone.pitch"); player.pitch = tonePitch } }
     @Published var toneVariation: Double { didSet { defaults.set(toneVariation, forKey: "tone.variation"); player.variation = toneVariation } }
+    @Published var softness: Double { didSet { defaults.set(softness, forKey: "tone.softness"); cm_set_softness(Float(softness)) } }
     @Published var spatialMode: SpatialMode { didSet { defaults.set(spatialMode.rawValue, forKey: "spatial"); player.spatial = spatialMode } }
     @Published var modifierSounds: Bool { didSet { defaults.set(modifierSounds, forKey: "sounds.modifiers") } }
     @Published var mouseSounds: Bool { didSet { defaults.set(mouseSounds, forKey: "sounds.mouse") } }
@@ -50,7 +51,7 @@ final class AppState: ObservableObject {
 
     private init() {
         defaults.register(defaults: [
-            "enabled": true, "pack": "mechvibes-topre", "volume": 0.7, "tone.pitch": 0.0, "tone.variation": 0.25,
+            "enabled": true, "pack": "mechvibes-topre", "volume": 0.7, "tone.pitch": 0.0, "tone.variation": 0.25, "tone.softness": 0.4,
             "spatial": SpatialMode.auto.rawValue, "sounds.modifiers": true, "sounds.mouse": false,
             "sounds.scroll": false, "sounds.ding": false,
             "ding.style": DingStyle.classic.rawValue, "ding.volume": 0.5, "ding.longLines": true,
@@ -60,6 +61,7 @@ final class AppState: ObservableObject {
         volume = defaults.double(forKey: "volume")
         tonePitch = defaults.double(forKey: "tone.pitch")
         toneVariation = defaults.double(forKey: "tone.variation")
+        softness = defaults.double(forKey: "tone.softness")
         spatialMode = SpatialMode(rawValue: defaults.string(forKey: "spatial") ?? "") ?? .auto
         modifierSounds = defaults.bool(forKey: "sounds.modifiers")
         mouseSounds = defaults.bool(forKey: "sounds.mouse")
@@ -74,6 +76,7 @@ final class AppState: ObservableObject {
         bank = SoundBank()
         player.pitch = tonePitch
         player.variation = toneVariation
+        cm_set_softness(Float(softness))
         player.spatial = spatialMode
 
         Synth.ensureBuiltInPacks()

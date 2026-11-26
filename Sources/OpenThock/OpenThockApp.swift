@@ -17,6 +17,8 @@ enum Main {
         }
         if let i = args.firstIndex(of: "--render-demo"), i + 1 < args.count {
             let pack = args.firstIndex(of: "--pack").flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil } ?? "mechvibes-topre"
+            let softness = args.firstIndex(of: "--softness").flatMap { $0 + 1 < args.count ? Float(args[$0 + 1]) : nil } ?? 0
+            cm_set_softness(softness)
             exit(SelfTest.renderDemo(packID: pack, to: URL(fileURLWithPath: args[i + 1])) ? 0 : 1)
         }
         OpenThockApp.main()
