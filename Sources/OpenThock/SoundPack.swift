@@ -209,12 +209,13 @@ final class SoundBank {
 
     func load(_ newPack: PackInfo) {
         let files = PackStore.scanFiles(in: newPack.url)
+        let clips = Self.conditionedClips(files)
         var cache: [URL: Int32] = [:]
         var newOwned: [Int32] = []
         func sample(_ url: URL?) -> Int32? {
             guard let url else { return nil }
             if let id = cache[url] { return id }
-            guard let clip = try? AudioIO.read(url) else { return nil }
+            guard let clip = clips[url] else { return nil }
             let id = AudioIO.register(clip)
             guard id >= 0 else { return nil }
             cache[url] = id
@@ -246,6 +247,32 @@ final class SoundBank {
         ownedSamples = newOwned
         old.forEach { cm_sample_retire($0) }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { cm_collect() }
+    }
+
+    /// Reads every file, trims it, and evens out loudness within each key group, separately for
+    /// presses and releases. Keys whose recording looks broken are left out, so they borrow a
+    /// sibling's sound.
+    private static func conditionedClips(_ files: [String: (down: URL?, up: URL?)]) -> [URL: AudioIO.Clip] {
+        var clips: [URL: AudioIO.Clip] = [:]
+        for urls in files.values {
+            for url in [urls.down, urls.up].compactMap({ $0 }) where clips[url] == nil {
+                if let clip = try? AudioIO.read(url) { clips[url] = SampleConditioner.trim(clip) }
+            }
+        }
+        var groups: [KeyGroup: [(down: URL?, up: URL?)]] = [:]
+        for (id, urls) in files {
+            if let key = KeyMap.byID[id], key.group != .mouse { groups[key.group, default: []].append(urls) }
+        }
+        let sides = groups.values.flatMap { [$0.compactMap(\.down), $0.compactMap(\.up)] }
+        for side in sides {
+            let urls = side.filter { clips[$0] != nil }
+            guard urls.count >= 3 else { continue }
+            let gains = SampleConditioner.levelGains(urls.map { clips[$0]! })
+            for (url, gain) in zip(urls, gains) {
+                clips[url] = gain.map { SampleConditioner.apply($0, to: clips[url]!) }
+            }
+        }
+        return clips
     }
 
     /// A missing key borrows a sibling's sound. The sibling is chosen with a stable hash,
