@@ -41,9 +41,11 @@ final class Stats: ObservableObject {
         defaults.set(perKey, forKey: "stats.perKey")
     }
 
-    private static func dayString() -> String {
+    private static let dayFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        return f.string(from: Date())
-    }
+        return f
+    }()
+
+    private static func dayString() -> String { dayFormatter.string(from: Date()) }
 }

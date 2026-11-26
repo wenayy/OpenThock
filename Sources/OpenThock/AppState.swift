@@ -164,11 +164,16 @@ final class AppState: ObservableObject {
             if key.group == .mouse {
                 guard mouseSounds else { return }
             } else {
-                if down { stats.record(key) }
-                if key.isModifierLike && !modifierSounds { return }
+                if key.isModifierLike && !modifierSounds {
+                    if down { stats.record(key) }
+                    return
+                }
             }
             play(key, down: down)
-            if down { handleDing(after: key) }
+            if down {
+                if key.group != .mouse { stats.record(key) }
+                handleDing(after: key)
+            }
         case .scroll:
             guard scrollSounds, let sample = bank.entry(for: "scroll")?.down else { return }
             player.trigger(sample: sample, key: KeyMap.scroll, gain: 0.8)
