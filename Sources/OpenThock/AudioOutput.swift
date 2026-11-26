@@ -137,6 +137,15 @@ final class AudioOutput {
         } catch {
             NSLog("OpenThock: audio engine failed to start: \(error)")
         }
+        if let id = currentDeviceID { requestDeviceBuffer(id, frames: 256) }
+    }
+
+    private func requestDeviceBuffer(_ id: AudioDeviceID, frames: UInt32) {
+        var addr = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyBufferFrameSize,
+                                              mScope: kAudioObjectPropertyScopeGlobal,
+                                              mElement: kAudioObjectPropertyElementMain)
+        var size = frames
+        AudioObjectSetPropertyData(id, &addr, 0, nil, UInt32(MemoryLayout<UInt32>.size), &size)
     }
 
     private func setLowLatencyBuffer(frames: UInt32) {
