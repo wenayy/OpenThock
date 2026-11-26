@@ -32,6 +32,8 @@ void cm_collect(void);
 
 void cm_set_output_rate(double sampleRate);
 void cm_set_master_gain(float gain);
+/// 0 = original top end, 1 = softest. Any thread.
+void cm_set_softness(float softness);
 void cm_stop_all(void);
 
 /// Main thread only (single producer).
